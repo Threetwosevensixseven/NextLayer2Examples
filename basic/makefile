@@ -30,7 +30,8 @@ emu:
 	$(HDFMONKEY) put $(EMUSD) $(BASICDIR)\watch3.bin NextLayer2Examples
 	$(HDFMONKEY) put $(EMUSD) $(BASICDIR)/autoexec.bas NextZXOS
 #   Uncomment this to get the current autoexec.bas in the image back into the project:
-	$(HDFMONKEY) get $(EMUSD) /NextZXOS/autoexec.bas $(BASICDIR)/autoexec.bas
+#	$(HDFMONKEY) get $(EMUSD) /NextZXOS/autoexec.bas $(BASICDIR)/autoexec.bas
+#	$(HDFMONKEY) get $(EMUSD) /NextZXOS/autoexec.txt $(BASICDIR)/autoexec.txt
 	-$(KILL) cspect.exe 
 	CMD /C start /d $(EMUDIR) cspect -w3 -zxnext -nextrom -basickeys -exit -brk -tv -emu -mmc=$(EMUSD)
 
