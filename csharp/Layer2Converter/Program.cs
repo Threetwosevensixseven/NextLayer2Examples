@@ -98,7 +98,6 @@ namespace Layer2Converter
                 int chunkCount = pixels.Count / bankSize;
                 for (int i = 0; i < chunkCount; i++)
                 {
-                    // You can also not split it up at all, and output a single 80K file.
                     var pixelBytes = pixels.ToArray();
                     string fn = outPixels + (i + 1) + ".bin";
                     var pixelBank = new byte[bankSize];
@@ -108,6 +107,7 @@ namespace Layer2Converter
             }
             else
             {
+                // You can also not split it up at all, and output a single 80K file.
                 string fn = outPixels + ".bin";
                 File.WriteAllBytes(fn, pixels.ToArray());
             }
