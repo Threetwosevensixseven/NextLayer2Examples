@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Layer2Converter
 {
@@ -13,9 +10,8 @@ namespace Layer2Converter
     {
         const string INPUT_PATH = @"..\..\..\..\images\resized\";
         const string OUTPUT_PATH = @"..\..\..\..\basic\";
-        const int BANK_SIZE = 16 * 1024;
 
-        static void Main(string[] args)
+        static void Main()
         {
             Convert320x256("bridge.png", 16);
             Convert256x192("watch.png", 16);
@@ -102,7 +98,7 @@ namespace Layer2Converter
                 int chunkCount = pixels.Count / bankSize;
                 for (int i = 0; i < chunkCount; i++)
                 {
-                    // You can also split up into 8K files or not split it up at all.
+                    // You can also not split it up at all, and output a single 80K file.
                     var pixelBytes = pixels.ToArray();
                     string fn = outPixels + (i + 1) + ".bin";
                     var pixelBank = new byte[bankSize];
@@ -212,7 +208,7 @@ namespace Layer2Converter
             }
             else
             {
-                // You can also split up into 8K files or not split it up at all.
+                // You can also not split it up at all, and output a single 48K file.
                 string fn = outPixels + ".bin";
                 File.WriteAllBytes(fn, pixels.ToArray());
             }
