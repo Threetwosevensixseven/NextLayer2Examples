@@ -17,13 +17,13 @@ namespace Layer2Converter
 
         static void Main(string[] args)
         {
-            Convert320x256("bridge.png");
-            Convert256x256("watch.png");
+            Convert320x256("bridge.png", 16);
+            Convert256x192("watch.png", 16);
         }
 
-        static void Convert320x256(string inFile)
+        static void Convert320x256(string inFile, int? chunkSizeKiB = null)
         {
-            // Make some temporary data structure to hold the palette entries and pixel bytes.
+            // Make a temporary data structure to hold the palette entries and pixel bytes.
             var pal = new Dictionary<Color, ushort>();
             var palindex = new Dictionary<Color, byte>();
             var pixels = new List<byte>();
@@ -37,7 +37,7 @@ namespace Layer2Converter
                 // .NET has a bunch of abstraction to deal with multiframe images like anigifs
                 FrameDimension dimension = new FrameDimension(img.FrameDimensionsList[0]);
                 int frameCount = img.GetFrameCount(dimension);
-                for (int i = 0; i < frameCount; i++)
+                for (int i = 0; i < frameCount;)
                 {
                     byte palind = 0;
                     img.SelectActiveFrame(dimension, i);
@@ -92,15 +92,28 @@ namespace Layer2Converter
                     break;
                 }
             }
-            // NextZXOS APIs can read an write files up to Int32.Max size, but NextBASIC can only LOAD one 16K BANK at a time,
-            // so split up the 80K of pixels into five separate 16K files.
-            var pixelBytes = pixels.ToArray();
-            for (int i = 0; i < 5; i++)
+
+            if (chunkSizeKiB.HasValue && chunkSizeKiB.Value > 0)
             {
-                string fn = outPixels + (i + 1) + ".bin";
-                var pixelBank = new byte[BANK_SIZE];
-                Array.Copy(pixelBytes, BANK_SIZE * i, pixelBank, 0, BANK_SIZE);
-                File.WriteAllBytes(fn, pixelBank);
+                // NextZXOS APIs can read and write files up to Int32.Max size, but NextBASIC can only LOAD one
+                // 16K BANK at a time, so give the option to split up the 80K of pixels into five separate 16K files,
+                // or 8K, or any other arbitrary size,
+                int bankSize = chunkSizeKiB.Value * 1024;
+                int chunkCount = pixels.Count / bankSize;
+                for (int i = 0; i < chunkCount; i++)
+                {
+                    // You can also split up into 8K files or not split it up at all.
+                    var pixelBytes = pixels.ToArray();
+                    string fn = outPixels + (i + 1) + ".bin";
+                    var pixelBank = new byte[bankSize];
+                    Array.Copy(pixelBytes, bankSize * i, pixelBank, 0, bankSize);
+                    File.WriteAllBytes(fn, pixelBank);
+                }
+            }
+            else
+            {
+                string fn = outPixels + ".bin";
+                File.WriteAllBytes(fn, pixels.ToArray());
             }
 
             // 9 bit palettes are always 256 pairs of bytes, one for each palette entry.
@@ -110,9 +123,9 @@ namespace Layer2Converter
             File.WriteAllBytes(outPal, palByteArray);
         }
 
-        static void Convert256x256(string inFile)
+        static void Convert256x192(string inFile, int? chunkSizeKiB = null)
         {
-            // Make some temporary data structure to hold the palette entries and pixel bytes.
+            // Make a temporary data structure to hold the palette entries and pixel bytes.
             var pal = new Dictionary<Color, ushort>();
             var palindex = new Dictionary<Color, byte>();
             var pixels = new List<byte>();
@@ -126,7 +139,7 @@ namespace Layer2Converter
                 // .NET has a bunch of abstraction to deal with multiframe images like anigifs
                 FrameDimension dimension = new FrameDimension(img.FrameDimensionsList[0]);
                 int frameCount = img.GetFrameCount(dimension);
-                for (int i = 0; i < frameCount; i++)
+                for (int i = 0; i < frameCount;)
                 {
                     byte palind = 0;
                     img.SelectActiveFrame(dimension, i);
@@ -180,15 +193,28 @@ namespace Layer2Converter
                     break;
                 }
             }
-            // NextZXOS APIs can read an write files up to Int32.Max size, but NextBASIC can only LOAD one 16K BANK at a time,
-            // so split up the 48K of pixels into three separate 16K files.
-            var pixelBytes = pixels.ToArray();
-            for (int i = 0; i < 3; i++)
+
+            if (chunkSizeKiB.HasValue && chunkSizeKiB.Value > 0)
             {
-                string fn = outPixels + (i + 1) + ".bin";
-                var pixelBank = new byte[BANK_SIZE];
-                Array.Copy(pixelBytes, BANK_SIZE * i, pixelBank, 0, BANK_SIZE);
-                File.WriteAllBytes(fn, pixelBank);
+                // NextZXOS APIs can read and write files up to Int32.Max size, but NextBASIC can only LOAD one
+                // 16K BANK at a time, so give the option to split up the 48K of pixels into three separate 16K files,
+                // or 8K, or any other arbitrary size,
+                int bankSize = chunkSizeKiB.Value * 1024;
+                int chunkCount = pixels.Count / bankSize;
+                for (int i = 0; i < chunkCount; i++)
+                {
+                    var pixelBytes = pixels.ToArray();
+                    string fn = outPixels + (i + 1) + ".bin";
+                    var pixelBank = new byte[bankSize];
+                    Array.Copy(pixelBytes, bankSize * i, pixelBank, 0, bankSize);
+                    File.WriteAllBytes(fn, pixelBank);
+                }
+            }
+            else
+            {
+                // You can also split up into 8K files or not split it up at all.
+                string fn = outPixels + ".bin";
+                File.WriteAllBytes(fn, pixels.ToArray());
             }
 
             // 9 bit palettes are always 256 pairs of bytes, one for each palette entry.
